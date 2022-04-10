@@ -44,18 +44,51 @@ describe("StakingManager", function () {
   });
 
   it("Deposits a token in the first pool", async function () {
-    await createStakingPool(stakingManager, rewardToken.address);
-
+    // Arrange
+    const stakeToken = rewardToken;
+    await createStakingPool(stakingManager, stakeToken.address);
     const amount = 10;
-    await rewardToken.approve(stakingManager.address, amount);
+    await stakeToken.approve(stakingManager.address, amount);
 
-    await expect(stakingManager.deposit(0, amount))
+    // Act
+    const depositTransaction = await stakingManager.deposit(0, amount);
+
+    // Assert
+    await expect(depositTransaction)
       .to.emit(stakingManager, "Deposit")
       .withArgs(account1.address, 0, amount);
 
-    const stakingManagerBalance = await rewardToken.balanceOf(
+    const stakingManagerBalance = await stakeToken.balanceOf(
       stakingManager.address
     );
-    expect(stakingManagerBalance).to.be.equal(10);
+    expect(stakingManagerBalance).to.be.equal(amount);
+  });
+
+  it("Withdraw all tokens from a pool", async function () {
+    // Arrange
+    const stakeToken = rewardToken;
+    const account1PreviousBalance = await stakeToken.balanceOf(
+      account1.address
+    );
+    await createStakingPool(stakingManager, stakeToken.address);
+    const amount = 20;
+    await stakeToken.approve(stakingManager.address, amount);
+    await stakingManager.deposit(0, amount);
+
+    // Act
+    const withdrawTransaction = await stakingManager.withdraw(0);
+
+    // Assert
+    await expect(withdrawTransaction)
+      .to.emit(stakingManager, "Withdraw")
+      .withArgs(account1.address, 0, amount);
+
+    const stakingManagerBalance = await stakeToken.balanceOf(
+      stakingManager.address
+    );
+    expect(stakingManagerBalance).to.be.equal(0);
+
+    const account1Balance = await stakeToken.balanceOf(account1.address);
+    expect(account1Balance).to.be.equal(account1PreviousBalance);
   });
 });
