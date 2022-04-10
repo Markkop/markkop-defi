@@ -1,32 +1,64 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "./RewardToken.sol";
 
-contract StakingManager {
-    string private greeting;
+contract StakingManager is Ownable{
+    // Token to be payed as reward
+    RewardToken public rewardToken;
 
-    // Staking user
-    struct User {
-        uint256 amount; // How many LP tokens the user has staked.
-        uint256 rewardLockedUp; // Reward locked up.
-        uint256 nextHarvestUntil; // When the user can harvest again.
+    // Staking user for a pool
+    struct PoolStaker {
+        uint256 amount; // How many tokens the user has staked.
     }
 
     // Staking pool
     struct Pool {
-        IERC20 lpToken; // Address of LP token contract.
-        uint256 allocPoint; // How many allocation points assigned to this pool. Reward tokens to distribute per block.
-        uint256 lastRewardBlock; // Last block number that reward tokens distribution occurs.
-        uint256 accPositionPerShare; // Accumulated reward tokens per share, times 1e12.
-        uint16 depositFeeBP; // Deposit fee in basis points
-        uint256 harvestInterval; // Harvest interval in seconds
+        IERC20 stakeToken; // Token to be staked
     }
 
     // Staking pools
     Pool[] public pools;
 
-    // A user from an user address from a staking pool
-    mapping(uint256 => mapping(address => User)) public user;
+    // Mapping poolId => staker address => PoolStaker
+    mapping(uint256 => mapping(address => PoolStaker)) public poolStakers;
+
+    // Events
+    event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
+    event PoolCreated(uint256 poolId);
+
+    // Constructor
+    constructor(address rewardTokenAddress) {
+        rewardToken = RewardToken(rewardTokenAddress);
+    }
+
+    /**
+     * @dev Create a new staking pool
+     */
+    function createPool(IERC20 _stakeToken) public onlyOwner {
+        pools.push(Pool({
+            stakeToken: _stakeToken
+        }));
+        uint256 poolId = pools.length - 1;
+        emit PoolCreated(poolId);
+    }
+
+    /**
+     * @dev Deposit tokens to an existing pool
+     */
+    function deposit(uint256 _poolId, uint256 _amount) public {
+        require(_amount > 0, "Depois amount can't be zero");
+        Pool storage pool = pools[_poolId];
+        PoolStaker storage staker = poolStakers[_poolId][msg.sender];
+        pool.stakeToken.transferFrom(
+            address(msg.sender),
+            address(this),
+            _amount
+        );
+        staker.amount = staker.amount + _amount;
+        emit Deposit(msg.sender, _poolId, _amount);
+    }
 }
