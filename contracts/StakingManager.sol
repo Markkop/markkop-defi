@@ -58,13 +58,13 @@ contract StakingManager is Ownable{
         require(_amount > 0, "Deposit amount can't be zero");
         Pool storage pool = pools[_poolId];
         PoolStaker storage staker = poolStakers[_poolId][msg.sender];
+        staker.amount = staker.amount + _amount;
+        emit Deposit(msg.sender, _poolId, _amount);
         pool.stakeToken.safeTransferFrom(
             address(msg.sender),
             address(this),
             _amount
         );
-        staker.amount = staker.amount + _amount;
-        emit Deposit(msg.sender, _poolId, _amount);
     }
 
     /**
@@ -76,10 +76,10 @@ contract StakingManager is Ownable{
         uint256 amount = staker.amount;
         require(amount > 0, "Withdraw amount can't be zero");
         staker.amount = 0;
+        emit Withdraw(msg.sender, _poolId, amount);
         pool.stakeToken.transfer(
             address(msg.sender),
             amount
         );
-        emit Withdraw(msg.sender, _poolId, amount);
     }
 }
