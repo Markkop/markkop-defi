@@ -43,7 +43,7 @@ contract StakingManager is Ownable{
     /**
      * @dev Create a new staking pool
      */
-    function createPool(IERC20 _stakeToken) public onlyOwner {
+    function createPool(IERC20 _stakeToken) external onlyOwner {
         pools.push(Pool({
             stakeToken: _stakeToken
         }));
@@ -54,7 +54,7 @@ contract StakingManager is Ownable{
     /**
      * @dev Deposit tokens to an existing pool
      */
-    function deposit(uint256 _poolId, uint256 _amount) public {
+    function deposit(uint256 _poolId, uint256 _amount) external {
         require(_amount > 0, "Deposit amount can't be zero");
         Pool storage pool = pools[_poolId];
         PoolStaker storage staker = poolStakers[_poolId][msg.sender];
@@ -70,7 +70,7 @@ contract StakingManager is Ownable{
     /**
      * @dev Withdraw all tokens from an existing pool
      */
-    function withdraw(uint256 _poolId) public {
+    function withdraw(uint256 _poolId) external {
         Pool storage pool = pools[_poolId];
         PoolStaker storage staker = poolStakers[_poolId][msg.sender];
         uint256 amount = staker.amount;
