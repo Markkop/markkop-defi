@@ -77,7 +77,7 @@ contract StakingManager is Ownable{
         require(amount > 0, "Withdraw amount can't be zero");
         staker.amount = 0;
         emit Withdraw(msg.sender, _poolId, amount);
-        pool.stakeToken.transfer(
+        pool.stakeToken.safeTransfer(
             address(msg.sender),
             amount
         );
