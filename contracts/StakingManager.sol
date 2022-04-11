@@ -3,10 +3,14 @@ pragma solidity ^0.8.4;
 
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./RewardToken.sol";
 
 contract StakingManager is Ownable{
+    // Wrappers around ERC20 operations that throw on failure
+    using SafeERC20 for IERC20;
+
     // Token to be payed as reward
     RewardToken public rewardToken;
 
@@ -54,7 +58,7 @@ contract StakingManager is Ownable{
         require(_amount > 0, "Deposit amount can't be zero");
         Pool storage pool = pools[_poolId];
         PoolStaker storage staker = poolStakers[_poolId][msg.sender];
-        pool.stakeToken.transferFrom(
+        pool.stakeToken.safeTransferFrom(
             address(msg.sender),
             address(this),
             _amount
