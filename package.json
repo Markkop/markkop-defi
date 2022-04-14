@@ -3,6 +3,7 @@
   "scripts": {
     "deploy": "hardhat run scripts/deploy.ts",
     "test": "hardhat test",
+    "test:gas": "REPORT_GAS=true hardhat test",
     "node": "hardhat node",
     "typechain": "hardhat typechain"
   },
